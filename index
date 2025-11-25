@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz di Arte - Architettura e Scultura del '500</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.5;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        
+        /* Barra punteggio */
+        .score-bar {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 15px 25px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .score-item {
+            text-align: center;
+        }
+        
+        .score-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+        }
+        
+        .score-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .score-value.correct { color: #27ae60; }
+        .score-value.wrong { color: #e74c3c; }
+        
+        /* Progress bar */
+        .progress-container {
+            background: #ecf0f1;
+            border-radius: 10px;
+            height: 10px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        
+        /* Sezioni */
+        .section-title {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 30px 0 20px 0;
+        }
+        
+        /* Domande */
+        .question {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+        }
+        
+        .question.answered {
+            opacity: 0.9;
+        }
+        
+        .question.correct {
+            border-left-color: #27ae60;
+            background: #e8f8f0;
+        }
+        
+        .question.wrong {
+            border-left-color: #e74c3c;
+            background: #fdf0ed;
+        }
+        
+        .question-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 28px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .question-text {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: inline;
+        }
+        
+        /* Opzioni */
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .option {
+            background: white;
+            border: 2px solid #dfe6e9;
+            border-radius: 10px;
+            padding: 12px 15px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+        }
+        
+        .option:hover:not(.disabled) {
+            border-color: #667eea;
+            transform: translateX(5px);
+        }
+        
+        .option.disabled {
+            cursor: default;
+        }
+        
+        .option.selected {
+            border-color: #3498db;
+            background: #ebf5fb;
+        }
+        
+        .option.correct-answer {
+            border-color: #27ae60;
+            background: #d4edda;
+        }
+        
+        .option.wrong-answer {
+            border-color: #e74c3c;
+            background: #f8d7da;
+        }
+        
+        .option-letter {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #ecf0f1;
+            color: #2c3e50;
+            font-weight: bold;
+            margin-right: 12px;
+            flex-shrink: 0;
+            font-size: 14px;
+        }
+        
+        .option.correct-answer .option-letter {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .option.wrong-answer .option-letter {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        /* Feedback */
+        .feedback {
+            margin-top: 12px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .feedback.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .feedback.correct {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .feedback.wrong {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Risultato finale */
+        .final-result {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            color: white;
+            margin-top: 30px;
+        }
+        
+        .final-result.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .final-score {
+            font-size: 72px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        
+        .final-message {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .final-detail {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .btn-restart {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            margin-top: 25px;
+            transition: transform 0.2s ease;
+        }
+        
+        .btn-restart:hover {
+            transform: scale(1.05);
+        }
+        
+        /* Emoji risultato */
+        .result-emoji {
+            font-size: 80px;
+            margin-bottom: 10px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 22px;
+            }
+            
+            .score-bar {
+                justify-content: center;
+            }
+            
+            .option {
+                padding: 10px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🎨 Quiz di Arte</h1>
+    <p class="subtitle">Architettura e Scultura del '500</p>
+    
+    <div class="score-bar">
+        <div class="score-item">
+            <div class="score-label">Domande</div>
+            <div class="score-value" id="answered">0</div>
+        </div>
+        <div class="score-item">
+            <div class="score-label">Corrette</div>
+            <div class="score-value correct" id="correct">0</div>
+        </div>
+        <div class="score-item">
+            <div class="score-label">Sbagliate</div>
+            <div class="score-value wrong" id="wrong">0</div>
+        </div>
+        <div class="score-item">
+            <div class="score-label">Totale</div>
+            <div class="score-value" id="total">40</div>
+        </div>
+    </div>
+    
+    <div class="progress-container">
+        <div class="progress-bar" id="progress"></div>
+    </div>
+    
+    <div id="quiz-container"></div>
+    
+    <div class="final-result" id="final-result">
+        <div class="result-emoji" id="result-emoji">🏆</div>
+        <div class="final-message" id="final-message">Complimenti!</div>
+        <div class="final-score" id="final-score">0%</div>
+        <div class="final-detail" id="final-detail">Hai risposto correttamente a 0 domande su 40</div>
+        <button class="btn-restart" onclick="restartQuiz()">🔄 Ricomincia</button>
+    </div>
+</div>
+
+<script>
+const quizData = [
+    // SEZIONE A - Architettura del '500
+    {
+        section: "SEZIONE A – Architettura del '500",
+        question: "Perché nel '500 si diffonde l'uso della pianta centrale?",
+        options: [
+            "Perché costava meno da costruire",
+            "Perché rifletteva la perfezione dell'universo e l'armonia divina",
+            "Perché permetteva di ospitare più fedeli",
+            "Perché era più facile da riscaldare"
+        ],
+        correct: 1
+    },
+    {
+        question: "Chi commissiona la demolizione dell'antica basilica paleocristiana di San Pietro?",
+        options: ["Papa Leone X", "Papa Giulio II", "Lorenzo de' Medici", "Papa Sisto IV"],
+        correct: 1
+    },
+    {
+        question: "Quale architetto progetta per primo la nuova Basilica di San Pietro?",
+        options: ["Michelangelo", "Raffaello", "Donato Bramante", "Andrea Palladio"],
+        correct: 2
+    },
+    {
+        question: "A quale opera si ispira Michelangelo per la cupola di San Pietro?",
+        options: [
+            "Al Pantheon di Roma",
+            "Alla cupola del Brunelleschi per il Duomo di Firenze",
+            "Alla cupola di Santa Sofia a Istanbul",
+            "Al Tempietto di San Pietro in Montorio"
+        ],
+        correct: 1
+    },
+    {
+        question: "In che anno la pianta di San Pietro viene trasformata in longitudinale?",
+        options: ["1547", "1550", "1600", "1503"],
+        correct: 2
+    },
+    {
+        question: "Il Tempietto di San Pietro in Montorio richiama la forma del:",
+        options: ["Partenone greco", "Tholos, tempio circolare greco-romano", "Colosseo romano", "Arco di trionfo"],
+        correct: 1
+    },
+    {
+        question: "In che anno Bramante realizza il Tempietto di San Pietro in Montorio?",
+        options: ["1498", "1503", "1547", "1550"],
+        correct: 1
+    },
+    
+    // SEZIONE B - Scultura del '500
+    {
+        section: "SEZIONE B – Scultura del '500",
+        question: "Qual è il tema fondamentale della scultura di Michelangelo?",
+        options: [
+            "L'azione umana nello spazio prospettico",
+            "La figura umana perfetta e autonoma, fuori dallo spazio prospettico",
+            "I paesaggi naturali",
+            "Le scene di vita quotidiana"
+        ],
+        correct: 1
+    },
+    {
+        question: "Quanti anni aveva Michelangelo quando iniziò a scolpire il David?",
+        options: ["18 anni", "24 anni", "26 anni", "30 anni"],
+        correct: 2
+    },
+    {
+        question: "Da dove proveniva il blocco di marmo usato per il David?",
+        options: ["Da Roma", "Dalle cave di Carrara", "Da Firenze", "Da Venezia"],
+        correct: 1
+    },
+    {
+        question: "Quanto è alto il David di Michelangelo?",
+        options: ["Circa 2 metri", "Circa 3 metri", "Più di 4 metri", "Circa 5 metri"],
+        correct: 2
+    },
+    {
+        question: "Dove fu collocato inizialmente il David?",
+        options: [
+            "Nella Galleria dell'Accademia",
+            "In Piazza della Signoria, davanti a Palazzo Vecchio",
+            "Nella Basilica di San Pietro",
+            "Nel Duomo di Firenze"
+        ],
+        correct: 1
+    },
+    {
+        question: "La posizione del David ricorda il modello classico di:",
+        options: ["Fidia", "Prassitele", "Policleto", "Mirone"],
+        correct: 2
+    },
+    {
+        question: "Quanti anni aveva Michelangelo quando scolpì la Pietà vaticana?",
+        options: ["20 anni", "24 anni", "26 anni", "30 anni"],
+        correct: 1
+    },
+    {
+        question: "Lo schema compositivo della Pietà è:",
+        options: ["Circolare", "Piramidale, di ispirazione leonardesca", "Quadrato", "A croce"],
+        correct: 1
+    },
+    {
+        question: "Perché nella Pietà la Madonna appare più giovane di Gesù?",
+        options: [
+            "Per un errore di Michelangelo",
+            "Perché rappresenta Maria da giovane",
+            "Perché il Figlio, essendo Dio, è anche Padre della Madonna",
+            "Per motivi estetici"
+        ],
+        correct: 2
+    },
+    {
+        question: "Dove si trova oggi la Pietà di Michelangelo?",
+        options: [
+            "Firenze, Galleria dell'Accademia",
+            "Roma, Musei Vaticani",
+            "Città del Vaticano, Basilica di San Pietro",
+            "Milano, Pinacoteca di Brera"
+        ],
+        correct: 2
+    },
+    
+    // SEZIONE C - Palladio e le ville venete
+    {
+        section: "SEZIONE C – Palladio e le ville venete",
+        question: "Quale antico trattato studia Andrea Palladio?",
+        options: [
+            "I trattati di Leon Battista Alberti",
+            "I trattati di Vitruvio",
+            "I trattati di Brunelleschi",
+            "I trattati di Leonardo"
+        ],
+        correct: 1
+    },
+    {
+        question: "Cos'è la \"serliana\"?",
+        options: [
+            "Un tipo di colonna",
+            "Un'apertura con due architravi laterali e un arco centrale",
+            "Una cupola semisferica",
+            "Un tipo di pavimento"
+        ],
+        correct: 1
+    },
+    {
+        question: "Perché Palladio chiama \"Basilica\" il Palazzo della Ragione di Vicenza?",
+        options: [
+            "Perché era una chiesa",
+            "Perché vi si discuteva pubblicamente, come nelle antiche basiliche romane",
+            "Perché aveva una pianta a croce latina",
+            "Perché era molto grande"
+        ],
+        correct: 1
+    },
+    {
+        question: "Perché nel '500 l'aristocrazia veneta si trasferisce in campagna?",
+        options: [
+            "Per sfuggire alle epidemie",
+            "Per controllare le proprietà terriere",
+            "Per motivi religiosi",
+            "Per ordine del governo"
+        ],
+        correct: 1
+    },
+    {
+        question: "Come si chiama la villa più famosa di Palladio?",
+        options: ["Villa Medici", "Villa d'Este", "Villa Almerico-Capra detta \"La Rotonda\"", "Villa Borghese"],
+        correct: 2
+    },
+    {
+        question: "Cosa si svolgeva nel salone centrale della Rotonda?",
+        options: ["Riunioni politiche", "Concerti e gare di poesia", "Funzioni religiose", "Banchetti di caccia"],
+        correct: 1
+    },
+    {
+        question: "A quale monumento romano rimandano i pronai della Rotonda?",
+        options: ["Al Colosseo", "All'Arco di Costantino", "Al Pantheon", "Alle Terme di Caracalla"],
+        correct: 2
+    },
+    {
+        question: "Quante facciate ha la Villa Rotonda e come sono?",
+        options: [
+            "Due facciate, una principale e una secondaria",
+            "Quattro facciate, tutte di uguale importanza",
+            "Tre facciate con pronao",
+            "Una sola facciata monumentale"
+        ],
+        correct: 1
+    },
+    
+    // SEZIONE D - Domande aggiuntive su Raffaello
+    {
+        section: "SEZIONE D – Approfondimenti",
+        question: "Quale opera di Raffaello è citata nel capitolo e dove si trova?",
+        options: [
+            "La Scuola di Atene, Musei Vaticani",
+            "Lo sposalizio della Vergine, Milano, Pinacoteca di Brera",
+            "La Trasfigurazione, Musei Vaticani",
+            "La Madonna Sistina, Dresda"
+        ],
+        correct: 1
+    },
+    {
+        question: "In quali anni visse Andrea Palladio?",
+        options: ["1475-1564", "1508-1580", "1483-1520", "1520-1590"],
+        correct: 1
+    },
+    {
+        question: "Come si intitola il trattato scritto da Palladio?",
+        options: [
+            "De Architectura",
+            "I quattro libri dell'architettura",
+            "Trattato di architettura civile",
+            "Dell'arte del costruire"
+        ],
+        correct: 1
+    },
+    {
+        question: "In che secolo visse Vitruvio, il teorico studiato da Palladio?",
+        options: ["III secolo a.C.", "I secolo a.C.", "I secolo d.C.", "II secolo d.C."],
+        correct: 1
+    },
+    {
+        question: "In che anno Palladio inizia la ristrutturazione della Basilica di Vicenza?",
+        options: ["1503", "1549", "1550", "1560"],
+        correct: 1
+    },
+    {
+        question: "La serliana usata da Palladio era un'invenzione rinascimentale?",
+        options: [
+            "Sì, fu inventata da Sebastiano Serlio",
+            "No, era già usata dai Romani",
+            "Sì, fu inventata da Bramante",
+            "No, era di origine bizantina"
+        ],
+        correct: 1
+    },
+    {
+        question: "Che soggetto hanno gli affreschi della Villa Rotonda?",
+        options: ["Scene campestri e agricole", "Soggetti mitologici", "Scene religiose", "Ritratti di famiglia"],
+        correct: 1
+    },
+    {
+        question: "Dove ebbe maggior successo il modello di villa palladiana nei secoli successivi?",
+        options: [
+            "In Francia e Spagna",
+            "In Inghilterra e America",
+            "In Germania e Austria",
+            "Nei Paesi Bassi"
+        ],
+        correct: 1
+    },
+    {
+        question: "Quanto tempo impiegò Michelangelo a scolpire il David?",
+        options: ["Un anno", "Due anni", "Tre anni", "Cinque anni"],
+        correct: 2
+    },
+    {
+        question: "Perché il blocco di marmo del David era rimasto inutilizzato?",
+        options: [
+            "Era troppo costoso",
+            "Nessuno era riuscito ancora a scolpirlo",
+            "Era stato danneggiato",
+            "Era di qualità scadente"
+        ],
+        correct: 1
+    },
+    {
+        question: "In quale momento è rappresentato David nella statua di Michelangelo?",
+        options: [
+            "Mentre lancia la pietra contro Golia",
+            "Dopo aver ucciso Golia",
+            "Nella concentrazione che precede l'azione",
+            "Mentre raccoglie la pietra"
+        ],
+        correct: 2
+    },
+    {
+        question: "Cosa facilitò a Michelangelo lo studio dei modelli antichi?",
+        options: [
+            "I viaggi in Grecia",
+            "Il ritrovamento a Roma di molte opere classiche",
+            "I disegni di Leonardo",
+            "I trattati di Vitruvio"
+        ],
+        correct: 1
+    },
+    {
+        question: "Come considerava se stesso Michelangelo?",
+        options: [
+            "Più pittore che scultore",
+            "Più scultore che pittore",
+            "Principalmente architetto",
+            "Soprattutto poeta"
+        ],
+        correct: 1
+    },
+    {
+        question: "Quale effetto crea l'ampio panneggio della Pietà?",
+        options: [
+            "Nasconde il corpo di Cristo",
+            "Dà risalto, per contrasto, al corpo levigato di Cristo",
+            "Rappresenta il sudario",
+            "Simboleggia il lutto"
+        ],
+        correct: 1
+    },
+    {
+        question: "Quante cupole concentriche ha la struttura progettata da Michelangelo per San Pietro?",
+        options: [
+            "Una sola cupola",
+            "Due cupole concentriche",
+            "Tre cupole sovrapposte",
+            "Una cupola e un tamburo"
+        ],
+        correct: 1
+    }
+];
+
+let answeredCount = 0;
+let correctCount = 0;
+let wrongCount = 0;
+const totalQuestions = quizData.length;
+
+function renderQuiz() {
+    const container = document.getElementById('quiz-container');
+    let html = '';
+    let currentSection = '';
+    
+    quizData.forEach((item, index) => {
+        // Aggiungi titolo sezione se cambia
+        if (item.section && item.section !== currentSection) {
+            currentSection = item.section;
+            html += `<div class="section-title">📚 ${currentSection}</div>`;
+        }
+        
+        const letters = ['A', 'B', 'C', 'D'];
+        
+        html += `
+            <div class="question" id="question-${index}">
+                <div>
+                    <span class="question-number">${index + 1}</span>
+                    <span class="question-text">${item.question}</span>
+                </div>
+                <div class="options">
+                    ${item.options.map((opt, optIndex) => `
+                        <div class="option" id="option-${index}-${optIndex}" onclick="checkAnswer(${index}, ${optIndex})">
+                            <span class="option-letter">${letters[optIndex]}</span>
+                            <span>${opt}</span>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="feedback" id="feedback-${index}"></div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+    document.getElementById('total').textContent = totalQuestions;
+}
+
+function checkAnswer(questionIndex, selectedOption) {
+    const question = quizData[questionIndex];
+    const questionDiv = document.getElementById(`question-${questionIndex}`);
+    const feedbackDiv = document.getElementById(`feedback-${questionIndex}`);
+    const options = questionDiv.querySelectorAll('.option');
+    
+    // Se già risposto, non fare nulla
+    if (questionDiv.classList.contains('answered')) return;
+    
+    // Segna come risposto
+    questionDiv.classList.add('answered');
+    answeredCount++;
+    
+    // Disabilita tutte le opzioni
+    options.forEach(opt => opt.classList.add('disabled'));
+    
+    // Evidenzia la risposta selezionata e quella corretta
+    const selectedDiv = document.getElementById(`option-${questionIndex}-${selectedOption}`);
+    const correctDiv = document.getElementById(`option-${questionIndex}-${question.correct}`);
+    
+    if (selectedOption === question.correct) {
+        // Risposta corretta
+        correctCount++;
+        selectedDiv.classList.add('correct-answer');
+        questionDiv.classList.add('correct');
+        feedbackDiv.className = 'feedback correct show';
+        feedbackDiv.innerHTML = '✅ <strong>Corretto!</strong> Ottimo lavoro!';
+    } else {
+        // Risposta sbagliata
+        wrongCount++;
+        selectedDiv.classList.add('wrong-answer');
+        correctDiv.classList.add('correct-answer');
+        questionDiv.classList.add('wrong');
+        feedbackDiv.className = 'feedback wrong show';
+        feedbackDiv.innerHTML = `❌ <strong>Sbagliato!</strong> La risposta corretta era: <strong>${question.options[question.correct]}</strong>`;
+    }
+    
+    // Aggiorna punteggio
+    updateScore();
+    
+    // Controlla se quiz completato
+    if (answeredCount === totalQuestions) {
+        setTimeout(showFinalResult, 500);
+    }
+}
+
+function updateScore() {
+    document.getElementById('answered').textContent = answeredCount;
+    document.getElementById('correct').textContent = correctCount;
+    document.getElementById('wrong').textContent = wrongCount;
+    
+    const progress = (answeredCount / totalQuestions) * 100;
+    document.getElementById('progress').style.width = progress + '%';
+}
+
+function showFinalResult() {
+    const percentage = Math.round((correctCount / totalQuestions) * 100);
+    const resultDiv = document.getElementById('final-result');
+    const emojiDiv = document.getElementById('result-emoji');
+    const messageDiv = document.getElementById('final-message');
+    const scoreDiv = document.getElementById('final-score');
+    const detailDiv = document.getElementById('final-detail');
+    
+    // Determina emoji e messaggio in base al punteggio
+    let emoji, message;
+    if (percentage >= 90) {
+        emoji = '🏆';
+        message = 'Eccellente!';
+    } else if (percentage >= 75) {
+        emoji = '🌟';
+        message = 'Ottimo lavoro!';
+    } else if (percentage >= 60) {
+        emoji = '👍';
+        message = 'Buon risultato!';
+    } else if (percentage >= 50) {
+        emoji = '📚';
+        message = 'Sufficiente, ma puoi migliorare!';
+    } else {
+        emoji = '💪';
+        message = 'Riprova, ce la puoi fare!';
+    }
+    
+    emojiDiv.textContent = emoji;
+    messageDiv.textContent = message;
+    scoreDiv.textContent = percentage + '%';
+    detailDiv.textContent = `Hai risposto correttamente a ${correctCount} domande su ${totalQuestions}`;
+    
+    resultDiv.classList.add('show');
+    resultDiv.scrollIntoView({ behavior: 'smooth' });
+}
+
+function restartQuiz() {
+    answeredCount = 0;
+    correctCount = 0;
+    wrongCount = 0;
+    
+    document.getElementById('final-result').classList.remove('show');
+    renderQuiz();
+    updateScore();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Inizializza il quiz
+renderQuiz();
+updateScore();
+</script>
+
+</body>
+</html>
